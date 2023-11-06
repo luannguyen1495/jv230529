@@ -1,0 +1,141 @@
+CREATE TABLE demo(
+	id int primary key auto_increment,
+    email varchar(50) unique
+);
+
+INSERT INTO demo(email) VALUES ('B');
+INSERT INTO demo(email) VALUES ('A');
+INSERT INTO demo(email) VALUES ('D');
+INSERT INTO demo(email) VALUES ('XXX');
+
+select * from demo ORDER BY id;
+SELECT * FROM demo01.categories;
+
+
+SELECT * FROM categories;
+
+SELECT c.*, c1.name as 'parent_name'
+FROM categories c  LEFT JOIN categories c1
+ON c.parent_id = c1.id;
+
+
+-- tạo chỉ mục trên cột name trong bảng categories 
+
+CREATE INDEX idx_name_on_cate ON categories(name);
+
+-- xóa chỉ mục 
+ALTER TABLE categories drop index  idx_name_on_cate;
+
+-- tạo chỉ mục unique
+
+CREATE UNIQUE INDEX idx_uni_name_on_cate ON categories(name);
+
+-- 
+
+create table account(
+	id int primary key auto_increment,
+    email varchar(50) UNIQUE,
+    password varchar(255),
+    user_name varchar(50) UNIQUE
+); 
+INSERT INTO account(email,password,user_name) VALUES ('c','123456','a');
+INSERT INTO account(email,password,user_name) VALUES ('a','123456','b');
+
+SELECT * FROM account;
+
+
+CREATE TABLE IF NOT EXISTS `products` (
+  `id` INT  NOT NULL AUTO_INCREMENT,
+  `product_name` VARCHAR(255),
+  `price` FLOAT,
+  `category_id` INT NOT NULL,
+  PRIMARY KEY `pk_id`(`id`)
+) ENGINE = InnoDB;
+
+
+ALTER TABLE `products`
+ADD CONSTRAINT `fk_products_far_category`
+  FOREIGN KEY (`category_id`)
+  REFERENCES `categories` (`id`);
+-- thuc hiện truy vấn trả về tất tt sản phẩm và tên danh mục 
+
+SELECT products.*,categories.name as category_name
+FROM products JOIN categories
+ON products.category_id = categories.id;
+
+-- Tạo view
+
+CREATE VIEW vw_product_x AS
+SELECT products.*,categories.name as category_name
+FROM products JOIN categories
+ON products.category_id = categories.id;
+
+-- GỌI VIEW 
+SELECT * FROM vw_product_x;
+
+-- TẠO VIEW lấy da danh sách danh mục số lượng sản phẩm theo danh mục
+CREATE VIEW vw_count_pro_in_cate
+AS
+	SELECT categories.name, count(products.id) as qty_pro
+	FROM categories
+	LEFT JOIN products 
+	ON categories.id = products.category_id 
+	group by categories.name;
+
+-- GOI VIEW 
+SELECT * FROM vw_count_pro_in_cate;
+
+-- THỦ TỤC Không tham số 
+/*
+DELIMITER  &&
+CREATE PROCEDURE procedureName()
+BEGIN
+	// xư ly
+END &&
+DELIMITER ;
+*/
+
+-- thủ tục lấy về danh sách sản phẩm 
+
+DELIMITER &&
+CREATE PROCEDURE proc_getAll_pro()
+BEGIN
+	SELECT * FROM products;
+END &&
+DELIMITER ;
+
+-- gọi thủ tục
+CALL proc_getAll_pro();
+
+-- THủ tục có tham số đầu vào 
+-- demo1 xây dựng thủ thục thực hiện thêm mới danh mục
+
+DELIMITER &&
+CREATE PROCEDURE proc_insert_category(IN categoryName varchar(50))
+BEGIN
+	INSERT INTO categories(name) VALUES (categoryName);
+END &&
+DELIMITER ;
+
+-- goij thu tuc cos tham so dau vao 
+CALL proc_insert_category('Dep Laof');
+SELECT * FROM categories;
+
+-- VI DU VE LIMIT
+SELECT * FROM categories LIMIT 2,2; 
+
+
+-- xóa thủ tục
+DROP PROCEDURE proc_pagination_category;
+-- định nghĩa thủ tục phân trang 
+DELIMITER &&
+CREATE PROCEDURE proc_pagination_category(IN no_page int,IN pro_limit int)
+BEGIN
+	DECLARE start INT; 
+	SET start = (no_page -1) * pro_limit;
+	select * FROM categories LIMIT start,pro_limit;
+END &&
+DELIMITER ;
+
+CALL proc_pagination_category(2,2);
+
